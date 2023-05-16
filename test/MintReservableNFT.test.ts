@@ -5,7 +5,7 @@ import { ethers } from "hardhat";
 
 describe("MintReservableNFT", () => {
   it("story", async () => {
-    const [owner, user1, user2, user3] = await ethers.getSigners();
+    const [owner, user1, user2] = await ethers.getSigners();
     const MintReservableNFT = await ethers.getContractFactory("MintReservableNFT");
 
     const mintReservableNFT = await MintReservableNFT.deploy(
