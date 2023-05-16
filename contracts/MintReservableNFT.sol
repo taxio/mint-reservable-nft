@@ -11,6 +11,7 @@ contract MintReservableNFT is Ownable, ERC721 {
 
     uint256 public immutable mintPrice;
     uint256 public immutable targetResarvation;
+    uint256 public immutable timeLimit;
 
     event MintReserved(address user);
     event ReservationCanceled(address user);
@@ -36,13 +37,16 @@ contract MintReservableNFT is Ownable, ERC721 {
         string memory _name,
         string memory _symbol,
         uint256 _mintPrice,
-        uint256 _targetReservation
+        uint256 _targetReservation,
+        uint256 _timeLimit
     ) ERC721(_name, _symbol) {
         mintPrice = _mintPrice;
         targetResarvation = _targetReservation;
+        timeLimit = _timeLimit;
     }
 
     function reserveMint() external payable onlyNotAchieved {
+        require(block.timestamp < timeLimit, "Time limit exceeded");
         require(msg.value == mintPrice, "Invalid value");
         reserved += 1;
         userReservation[msg.sender] += 1;

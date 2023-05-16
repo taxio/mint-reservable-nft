@@ -1,15 +1,14 @@
-import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
 describe("MintReservableNFT", () => {
-  it("story", async () => {
+  it("target achieved story", async () => {
     const [owner, user1, user2] = await ethers.getSigners();
     const MintReservableNFT = await ethers.getContractFactory("MintReservableNFT");
 
     const mintReservableNFT = await MintReservableNFT.deploy(
-      "Test", "TS", ethers.utils.parseEther("1"), 2
+      "Test", "TS", ethers.utils.parseEther("1"), 2, await time.latest() + 60 * 60 * 24 * 7
     );
 
     await expect(
@@ -65,6 +64,30 @@ describe("MintReservableNFT", () => {
         owner.address,
         ethers.provider.getBalance(mintReservableNFT.address)
       )
+    ).to.not.reverted;
+  });
+
+  it("time limit exceeded story", async () => {
+    const [user1, user2] = await ethers.getSigners();
+    const MintReservableNFT = await ethers.getContractFactory("MintReservableNFT");
+
+    const mintReservableNFT = await MintReservableNFT.deploy(
+      "Test", "TS", ethers.utils.parseEther("1"), 2, await time.latest() + 60 * 5
+    );
+
+    await expect(
+      mintReservableNFT.connect(user1).reserveMint({value: ethers.utils.parseEther("1")})
+    ).to.not.reverted;
+    expect(await mintReservableNFT.reserved()).to.equal(1);
+
+    await time.increase(60 * 6);
+
+    await expect(
+      mintReservableNFT.connect(user2).reserveMint({value: ethers.utils.parseEther("1")})
+    ).to.be.revertedWith("Time limit exceeded");
+
+    await expect(
+      mintReservableNFT.connect(user1).cancelReservation()
     ).to.not.reverted;
   });
 });
